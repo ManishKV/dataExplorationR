@@ -20,6 +20,12 @@ View(dataset) # Display the dataset
 dataset$Outcome <- as.factor(dataset$Outcome)
 str(dataset)
 
+# go through each variable column from 1 to 8
+# Any cell in each column containing 0 should become NA
+for (colIndex in c(1:8)){ 
+  dataset[which(dataset[, colIndex] == 0), colIndex] <- NA 
+}
+
 ###################################
 ### Step 2: Univariate Analysis ###
 ###################################
@@ -43,6 +49,13 @@ ggplot(data=data_pp,aes(x = value)) +
   geom_histogram()
 
 
+## Creating Bargraphs for Categorical variables
+cnames <- colnames(dataset)
+par(mfrow=c(2, 3)) 
+for(i in cnames[9:13]){
+  plot(dataset[[i]],xlab = i,type = "p",col = "blue", lwd = 1 )
+}
+
 ###################################
 ###  Step 3: Bivariate Analysis ###
 ###################################
@@ -55,28 +68,26 @@ my.ordered <- order.single(cor(dataset[,-c(9:13)]))
 cpairs(dataset[,-c(9:13)], my.ordered, panel.colors=my.colors, gap=0.5)
 
 
-#data_pp<-data.frame(rownumber=c(1:nrow(dataset)),dataset[,-c(1:8)])
-#data_pp<-reshape2::melt(data_pp,id.var="rownumber")
-#ggplot(data_pp, aes(x=variable, y=value, fill=rownumber)) + 
-#  geom_bar(stat="identity",position = "stack") +
-#  xlab("\nVariable") +
-#  ylab("Value\n") +
-#  guides(fill=FALSE) +
-#  theme_bw()
-
 # Table for Categorical Variable
 summary(dataset[,-c(1:8)])
 
 
-########################################
-###  Step 4: Missing Value Treatment ###
-########################################
+#########################################
+###  Step 4: Variable Transformations ###
+#########################################
 
-# go through each variable column from 1 to 8
-# Any cell in each column containing 0 should become NA
-for (colIndex in c(1:8)){ 
-  dataset[which(dataset[, colIndex] == 0), colIndex] <- NA 
-}
+par(mfrow=c(1, 2)) 
+
+boxplot(dataset$Insulin, main="Insulin") 
+boxplot(log(dataset$Insulin), main="Log Insulin") 
+
+boxplot(dataset$Age, main="Age") 
+boxplot(log(dataset$Age), main="Log Age") 
+
+
+########################################
+###  Step 5: Missing Value Treatment ###
+########################################
 
 # Checking for missing values
 apply(dataset, 2,function(x) round(sum(is.na(x)),2))
@@ -126,5 +137,3 @@ dataset_Exclusive_Filtered <- dataset_Exclusive_Filtered[complete.cases(dataset_
 # Imputation option 6:  Exclude the 2 variables with most misising values, 
 # and use kNN to impute missing values in the remaining variables
 dataset_Exclusive_kNN <- select(dataset_kNN, -c(Insulin, SkinThickness))
-
-
